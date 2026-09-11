@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: targeting-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SEU_USUARIO/fase3-argocd.git
+    targetRevision: main
+    path: services/targeting-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: targeting-service
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true

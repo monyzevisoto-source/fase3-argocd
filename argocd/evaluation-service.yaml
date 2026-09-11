@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: evaluation-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SEU_USUARIO/fase3-argocd.git
+    targetRevision: main
+    path: services/evaluation-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: evaluation-service
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true

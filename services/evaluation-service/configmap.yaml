@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: evaluation-service-configmap
+  namespace: evaluation-service
+data:
+  PORT: '8004'
+  REDIS_URL: rediss://clustercfg.cache-evaluation.a0sylf.use1.cache.amazonaws.com:6379
+  FLAG_SERVICE_URL: http://flag-service.flag-service.svc.cluster.local:8002
+  TARGETING_SERVICE_URL: http://targeting-service.targeting-service.svc.cluster.local:8003
+  AWS_SQS_URL: https://sqs.us-east-1.amazonaws.com/000613701548/EventQueue
+  AWS_REGION: us-east-1
