@@ -37,7 +37,7 @@ Depois de publicar os arquivos e configurar a URL:
 kubectl apply -k argocd/
 ```
 
-Esse comando registra as Applications. A sincronização é manual pela interface ou CLI do Argo CD. Sincronize auth-service, depois flag-service e targeting-service, e então evaluation-service e analytics-service. Não foi configurado prune automático.
+Esse comando registra as Applications. A sincronização é automática após aplicar as Applications: alterações no Git são sincronizadas pelo Argo CD. Prepare as dependências e os Secrets antes de registrar as Applications. Não foi configurado prune automático nem self-heal.
 
 Os HPAs mantêm os valores originais (analytics: 5% de CPU; evaluation: 70%). Os Deployments com HPA omitem `spec.replicas` para evitar disputa com o autoscaling. Os demais mantêm uma réplica.
 
