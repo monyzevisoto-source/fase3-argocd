@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/SEU_USUARIO/fase3-argocd.git
+    repoURL: https://github.com/monyzevisoto-source/fase3-argocd.git
     targetRevision: main
     path: services/evaluation-service
   destination:
