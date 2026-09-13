@@ -16,35 +16,35 @@ spec:
         app: auth-service
     spec:
       containers:
-      - name: auth-service
-        image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-auth:latest
-        ports:
-        - containerPort: 8001
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8001
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 2
-          failureThreshold: 3
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8001
-          initialDelaySeconds: 15
-          periodSeconds: 20
-          timeoutSeconds: 2
-          failureThreshold: 3
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 500m
-            memory: 256Mi
-        envFrom:
-        - configMapRef:
-            name: auth-service-configmap
-        - secretRef:
-            name: auth-service-secret
+        - name: auth-service
+          image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-auth:v1.0.0-146a416
+          ports:
+            - containerPort: 8001
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          envFrom:
+            - configMapRef:
+                name: auth-service-configmap
+            - secretRef:
+                name: auth-service-secret
