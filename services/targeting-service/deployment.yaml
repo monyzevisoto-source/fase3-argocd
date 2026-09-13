@@ -16,35 +16,35 @@ spec:
         app: targeting-service
     spec:
       containers:
-      - name: targeting-service
-        image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-targeting:latest
-        ports:
-        - containerPort: 8003
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8003
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 2
-          failureThreshold: 3
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8003
-          initialDelaySeconds: 15
-          periodSeconds: 20
-          timeoutSeconds: 2
-          failureThreshold: 3
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 500m
-            memory: 256Mi
-        envFrom:
-        - configMapRef:
-            name: targeting-service-configmap
-        - secretRef:
-            name: targeting-service-secret
+        - name: targeting-service
+          image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-targeting:v1.0.0-c91863c
+          ports:
+            - containerPort: 8003
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          envFrom:
+            - configMapRef:
+                name: targeting-service-configmap
+            - secretRef:
+                name: targeting-service-secret
