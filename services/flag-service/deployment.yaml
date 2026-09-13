@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: flag-service
-        image: 000613701548.dkr.ecr.us-east-1.amazonaws.com/flag-service:latest
+        image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-flag:latest
         ports:
         - containerPort: 8002
         readinessProbe:
