@@ -5,7 +5,7 @@ metadata:
   namespace: evaluation-service
 data:
   PORT: '8004'
-  REDIS_URL: rediss://fiap-fase3-dev-redis.zexu0k.ng.0001.use1.cache.amazonaws.com:6379
+  REDIS_URL: redis://fiap-fase3-dev-redis.zexu0k.ng.0001.use1.cache.amazonaws.com:6379
   FLAG_SERVICE_URL: http://flag-service.flag-service.svc.cluster.local:8002
   TARGETING_SERVICE_URL: http://targeting-service.targeting-service.svc.cluster.local:8003
   AWS_SQS_URL: https://sqs.us-east-1.amazonaws.com/360302648026/fiap-fase3-dev-events
