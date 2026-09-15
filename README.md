@@ -1,27 +1,56 @@
-# ToggleMaster — GitOps com Argo CD
+# Fase 3 — GitOps com Argo CD
 
-Este repositório contém os manifests Kubernetes e as Applications do Argo CD
-para os cinco microsserviços do ToggleMaster: `auth-service`, `flag-service`,
-`targeting-service`, `evaluation-service` e `analytics-service`.
+Repositório que contém os manifests Kubernetes e as cinco Applications do Argo
+CD para executar o ToggleMaster no Amazon EKS.
 
+## Como funciona
 
-Manifestos Kubernetes dos cinco microsserviços, mantidos neste repositório GitOps.
-Cada diretório `services/<serviço>` tem uma Kustomization independente; `argocd/`
-contém as cinco Applications. Não aponte uma Application para a raiz do repositório.
+Cada Application monitora a branch main deste repositório e aponta para uma
+Kustomization independente em services/<serviço>. Quando o GitHub Actions do
+repositório fase3-apps publica uma nova imagem, ele atualiza o campo image do
+Deployment correspondente e cria um commit.
 
-## Preparação
+O Argo CD detecta a diferença entre o Git e o cluster e, como a sincronização
+automática está habilitada, aplica a alteração. O Kubernetes baixa a nova imagem
+do ECR e realiza um rolling update, validando readiness e liveness probes.
 
-1. Use o repositório GitHub `monyzevisoto-source/fase3-argocd` como fonte GitOps.
-2. As cinco Applications já apontam para a URL real e para a branch `main`; ajuste esses valores somente se o repositório ou a branch mudarem.
-3. Cadastre o repositório no Argo CD se ele for privado. Os exemplos usam o projeto `default`, Argo CD no namespace `argocd` e o mesmo cluster onde ele está instalado.
-4. Confirme as imagens ECR e os endpoints de Redis, SQS e DynamoDB nos Deployments e ConfigMaps. Foram preservados os valores de `fase3-apps`; sua disponibilidade não foi verificada.
-5. Prepare os Secrets abaixo nos respectivos namespaces antes de sincronizar os serviços.
+Não há prune automático nem self-heal configurados.
 
-## Secrets externos ao Git
+## Estrutura
 
-Não há manifestos de Secret neste repositório. Provisione-os pelo processo de gestão de segredos do ambiente. Se já existem no cluster, preserve-os.
+`text
+.
+├── argocd/
+│   ├── kustomization.yaml
+│   └── <serviço>.yaml             # cinco Applications
+└── services/
+    └── <serviço>/
+        ├── namespace.yaml
+        ├── deployment.yaml
+        ├── service.yaml
+        ├── ingress.yaml
+        ├── configmap.yaml
+        ├── hpa.yaml               # evaluation e analytics
+        └── kustomization.yaml
+`
 
-| Namespace | Secret | Chaves obrigatórias |
+Os serviços são auth-service, flag-service, targeting-service,
+evaluation-service e analytics-service. Os Secrets não são versionados neste
+repositório.
+
+## Pré-requisitos
+
+- cluster EKS criado pelo repositório fase3-terraform;
+- Argo CD instalado no namespace argocd;
+- repositório GitHub acessível pelo Argo CD;
+- imagens disponíveis no ECR;
+- Secrets criados nos namespaces corretos;
+- PostgreSQL, Redis, SQS e DynamoDB disponíveis;
+- NGINX Ingress e Metrics Server instalados quando necessários.
+
+## Secrets
+
+| Namespace | Secret | Chaves |
 | --- | --- | --- |
 | auth-service | auth-service-secret | DATABASE_URL, MASTER_KEY |
 | flag-service | flag-service-secret | DATABASE_URL |
@@ -30,37 +59,45 @@ Não há manifestos de Secret neste repositório. Provisione-os pelo processo de
 | evaluation-service | aws-secret | AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN |
 | analytics-service | aws-secret | AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN |
 
-Crie os namespaces usando `kubectl apply -f services/<serviço>/namespace.yaml` antes de provisionar os Secrets. A SERVICE_API_KEY deve ser uma chave válida emitida pelo auth-service. As credenciais AWS temporárias precisam ser renovadas; as referências existentes foram preservadas.
+Não commite credenciais, tokens, URLs de banco com senha ou Secrets Kubernetes.
 
-PostgreSQL e os schemas de `fase3-apps/{auth,flag,targeting}-service/db/init.sql`, Redis com TLS, SQS e DynamoDB precisam estar disponíveis. O cluster precisa conseguir baixar as imagens ECR, ter o controlador de Ingress `nginx` para as rotas e Metrics Server para os HPAs.
+## Registrar as Applications
 
-## Registrar e sincronizar
+Com o kubeconfig apontando para o cluster correto:
 
-Depois de publicar os arquivos e configurar a URL:
-
-```sh
+`bash
 kubectl apply -k argocd/
-```
+kubectl get applications -n argocd
+kubectl get applications -n argocd -w
+`
 
-Esse comando registra as Applications. A sincronização é automática após aplicar as Applications: alterações na branch `main` são sincronizadas pelo Argo CD. Prepare as dependências e os Secrets antes de registrar as Applications. Não foi configurado prune automático nem self-heal.
+O comando registra as cinco Applications. A partir daí, alterações na branch main
+são observadas e sincronizadas automaticamente pelo Argo CD.
 
-Os HPAs mantêm os valores originais (analytics: 5% de CPU; evaluation: 70%). Os Deployments com HPA omitem `spec.replicas` para evitar disputa com o autoscaling. Os demais mantêm uma réplica.
+## Validar os manifests
 
-## Imagens e atualização
-
-As imagens usam tags imutáveis no formato `vMAJOR.MINOR.PATCH-<sha de 7 caracteres>`, publicadas pelo GitHub Actions no Amazon ECR. Após o push da imagem, o workflow do serviço altera somente o campo `image` do Deployment correspondente e cria um commit `deploy: update ...` neste repositório.
-
-O Argo CD monitora a branch `main`, detecta a diferença entre o estado desejado no Git e o estado atual do cluster e executa o sync automático. O Kubernetes realiza então um rolling update dos pods, validando as readiness e liveness probes. Pull requests não atualizam este repositório.
-
-## Validação local
-
-```sh
+`bash
 kubectl kustomize argocd/
-for service in auth-service flag-service targeting-service evaluation-service analytics-service; do
-  kubectl kustomize "services/$service" >/dev/null || exit 1
-done
-```
+kubectl kustomize services/auth-service >/dev/null
+kubectl kustomize services/flag-service >/dev/null
+kubectl kustomize services/targeting-service >/dev/null
+kubectl kustomize services/evaluation-service >/dev/null
+kubectl kustomize services/analytics-service >/dev/null
+`
 
-A renderização local não valida conectividade, credenciais ou disponibilidade das APIs no cluster.
+A renderização não valida credenciais, conectividade com a AWS ou disponibilidade
+dos serviços externos.
 
-Referência: [Kustomize no Argo CD](https://argo-cd.readthedocs.io/en/stable/user-guide/kustomize/).
+## Configuração dos serviços
+
+Os Ingress expõem auth, flags, targeting e evaluation pelo NGINX. O
+analytics-service é um worker e não possui API pública, mantendo apenas seu
+endpoint de health. Os HPAs de evaluation e analytics dependem do Metrics Server;
+os valores de CPU permanecem definidos nos manifests deste repositório.
+
+## Relação entre os repositórios
+
+1. fase3-terraform cria a plataforma AWS e instala EKS, Argo CD e NGINX.
+2. fase3-apps constrói, testa, verifica e publica as imagens no ECR.
+3. fase3-apps atualiza este repositório com a nova tag da imagem.
+4. Argo CD sincroniza o Git e atualiza os workloads no EKS.
