@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: analytics-service
-          image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-analytics:v1.4.0-0edf42e
+          image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-analytics:v1.5.0-b24a7db
           ports:
             - containerPort: 8005
           readinessProbe:
