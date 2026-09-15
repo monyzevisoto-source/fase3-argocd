@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-auth:v1.1.0-10ccb39
+          image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-auth:v1.1.0-46b8ce5
           ports:
             - containerPort: 8001
           readinessProbe:
