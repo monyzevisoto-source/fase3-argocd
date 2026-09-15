@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: targeting-service
-          image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-targeting:v1.4.0-0edf42e
+          image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-targeting:v1.5.0-b24a7db
           ports:
             - containerPort: 8003
           readinessProbe:
