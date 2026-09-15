@@ -1,13 +1,18 @@
 # ToggleMaster — GitOps com Argo CD
 
-Manifestos dos cinco microserviços, derivados de `fase3-apps/*/k8s`.
+Este repositório contém os manifests Kubernetes e as Applications do Argo CD
+para os cinco microsserviços do ToggleMaster: `auth-service`, `flag-service`,
+`targeting-service`, `evaluation-service` e `analytics-service`.
+
+
+Manifestos Kubernetes dos cinco microsserviços, mantidos neste repositório GitOps.
 Cada diretório `services/<serviço>` tem uma Kustomization independente; `argocd/`
 contém as cinco Applications. Não aponte uma Application para a raiz do repositório.
 
 ## Preparação
 
-1. Publique esta pasta em um repositório Git. Ela foi recebida vazia, sem `.git` ou remote configurado.
-2. Substitua `https://github.com/SEU_USUARIO/fase3-argocd.git` nos cinco arquivos de `argocd/` pela URL real e ajuste `targetRevision` se a branch não for `main`.
+1. Use o repositório GitHub `monyzevisoto-source/fase3-argocd` como fonte GitOps.
+2. As cinco Applications já apontam para a URL real e para a branch `main`; ajuste esses valores somente se o repositório ou a branch mudarem.
 3. Cadastre o repositório no Argo CD se ele for privado. Os exemplos usam o projeto `default`, Argo CD no namespace `argocd` e o mesmo cluster onde ele está instalado.
 4. Confirme as imagens ECR e os endpoints de Redis, SQS e DynamoDB nos Deployments e ConfigMaps. Foram preservados os valores de `fase3-apps`; sua disponibilidade não foi verificada.
 5. Prepare os Secrets abaixo nos respectivos namespaces antes de sincronizar os serviços.
@@ -37,13 +42,15 @@ Depois de publicar os arquivos e configurar a URL:
 kubectl apply -k argocd/
 ```
 
-Esse comando registra as Applications. A sincronização é automática após aplicar as Applications: alterações no Git são sincronizadas pelo Argo CD. Prepare as dependências e os Secrets antes de registrar as Applications. Não foi configurado prune automático nem self-heal.
+Esse comando registra as Applications. A sincronização é automática após aplicar as Applications: alterações na branch `main` são sincronizadas pelo Argo CD. Prepare as dependências e os Secrets antes de registrar as Applications. Não foi configurado prune automático nem self-heal.
 
 Os HPAs mantêm os valores originais (analytics: 5% de CPU; evaluation: 70%). Os Deployments com HPA omitem `spec.replicas` para evitar disputa com o autoscaling. Os demais mantêm uma réplica.
 
 ## Imagens e atualização
 
-As imagens mantêm a tag `latest` da origem. Para cada release, prefira alterar a imagem para uma tag imutável ou digest e publicar o commit neste repositório. Enviar uma nova imagem para a mesma tag `latest` não altera o template do Deployment e não inicia um rollout por si só.
+As imagens usam tags imutáveis no formato `vMAJOR.MINOR.PATCH-<sha de 7 caracteres>`, publicadas pelo GitHub Actions no Amazon ECR. Após o push da imagem, o workflow do serviço altera somente o campo `image` do Deployment correspondente e cria um commit `deploy: update ...` neste repositório.
+
+O Argo CD monitora a branch `main`, detecta a diferença entre o estado desejado no Git e o estado atual do cluster e executa o sync automático. O Kubernetes realiza então um rolling update dos pods, validando as readiness e liveness probes. Pull requests não atualizam este repositório.
 
 ## Validação local
 
