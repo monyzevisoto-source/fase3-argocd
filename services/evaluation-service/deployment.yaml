@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: evaluation-service
-          image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-evaluation:v1.2.0-8da4b81
+          image: 360302648026.dkr.ecr.us-east-1.amazonaws.com/fiap-fase3-dev-evaluation:v1.3.0-d4316da
           ports:
             - containerPort: 8004
           readinessProbe:
