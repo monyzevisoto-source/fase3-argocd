@@ -18,7 +18,7 @@ Não há prune automático nem self-heal configurados.
 
 ## Estrutura
 
-`text
+```text
 .
 ├── argocd/
 │   ├── kustomization.yaml
@@ -32,7 +32,7 @@ Não há prune automático nem self-heal configurados.
         ├── configmap.yaml
         ├── hpa.yaml               # evaluation e analytics
         └── kustomization.yaml
-`
+```
 
 Os serviços são auth-service, flag-service, targeting-service,
 evaluation-service e analytics-service. Os Secrets não são versionados neste
@@ -65,25 +65,25 @@ Não commite credenciais, tokens, URLs de banco com senha ou Secrets Kubernetes.
 
 Com o kubeconfig apontando para o cluster correto:
 
-`bash
+```bash
 kubectl apply -k argocd/
 kubectl get applications -n argocd
 kubectl get applications -n argocd -w
-`
+```
 
 O comando registra as cinco Applications. A partir daí, alterações na branch main
 são observadas e sincronizadas automaticamente pelo Argo CD.
 
 ## Validar os manifests
 
-`bash
+```bash
 kubectl kustomize argocd/
 kubectl kustomize services/auth-service >/dev/null
 kubectl kustomize services/flag-service >/dev/null
 kubectl kustomize services/targeting-service >/dev/null
 kubectl kustomize services/evaluation-service >/dev/null
 kubectl kustomize services/analytics-service >/dev/null
-`
+```
 
 A renderização não valida credenciais, conectividade com a AWS ou disponibilidade
 dos serviços externos.
