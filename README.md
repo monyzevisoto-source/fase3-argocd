@@ -1,7 +1,8 @@
 # Fase 3 — GitOps com Argo CD
 
-Repositório que contém os manifests Kubernetes e as cinco Applications do Argo
-CD para executar o ToggleMaster no Amazon EKS.
+Os manifests Kubernetes e as Applications do Argo CD foram incorporados ao
+repositório [fase3-terraform](https://github.com/monyzevisoto-source/fase3-terraform).
+Este repositório não é mais utilizado como fonte GitOps.
 
 ## Como funciona
 
