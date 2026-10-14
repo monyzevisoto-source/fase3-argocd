@@ -14,7 +14,9 @@ O Argo CD detecta a diferença entre o Git e o cluster e, como a sincronização
 automática está habilitada, aplica a alteração. O Kubernetes baixa a nova imagem
 do ECR e realiza um rolling update, validando readiness e liveness probes.
 
-Não há prune automático nem self-heal configurados.
+As Applications usam sincronização automática com prune e self-heal habilitados:
+alterações manuais no cluster são revertidas e recursos removidos do Git são
+apagados do cluster.
 
 ## Estrutura
 
