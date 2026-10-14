@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: targeting-service
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: targeting-service-configmap
+  namespace: targeting-service
+data:
+  PORT: "8003"
+  AUTH_SERVICE_URL: http://auth-service.auth-service.svc.cluster.local:8001
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: targeting-service-secret
+  namespace: targeting-service
+type: Opaque
+stringData:
+  DATABASE_URL: postgres://postgres:postgres@postgres.data.svc.cluster.local:5432/targetingdb?sslmode=disable
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: targeting-service
+  namespace: targeting-service
+spec:
+  selector: {app: targeting-service}
+  ports: [{name: http, port: 8003, targetPort: 8003}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: targeting-service-deployment
+  namespace: targeting-service
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: targeting-service}}
+  template:
+    metadata: {labels: {app: targeting-service}}
+    spec:
+      containers:
+      - name: targeting-service
+        image: togglemaster/targeting:local
+        imagePullPolicy: IfNotPresent
+        ports: [{containerPort: 8003}]
+        envFrom:
+        - configMapRef: {name: targeting-service-configmap}
+        - secretRef: {name: targeting-service-secret}
+        readinessProbe: {httpGet: {path: /health, port: 8003}, initialDelaySeconds: 5}
+        livenessProbe: {httpGet: {path: /health, port: 8003}, initialDelaySeconds: 15}

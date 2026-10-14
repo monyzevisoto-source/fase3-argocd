@@ -40,6 +40,28 @@ Os serviços são auth-service, flag-service, targeting-service,
 evaluation-service e analytics-service. Os Secrets não são versionados neste
 repositório.
 
+## Ambientes
+
+Existem dois ambientes: `local` e `prod`.
+
+O ambiente `local` é executado nesta máquina dentro de um cluster Minikube.
+Minikube é a implementação do cluster local, não um terceiro ambiente. O
+overlay público é `overlays/local`; internamente ele reutiliza os manifests
+compatíveis com Minikube em `overlays/minikube`.
+
+O ambiente local executa auth-service, flag-service, targeting-service e
+evaluation-service com PostgreSQL e Redis dentro do cluster. SQS e DynamoDB não
+são usados; analytics-service fica fora deste overlay.
+
+```bash
+kubectl apply -f argocd/root-local.yaml
+kubectl get application togglemaster-local -n argocd
+```
+
+Para produção, continue usando a Application raiz criada pelo `fase3-terraform`
+e as cinco Applications de `argocd/`. Não aplique `root-local.yaml` em um
+cluster EKS.
+
 ## Pré-requisitos
 
 - cluster EKS criado pelo repositório fase3-terraform;

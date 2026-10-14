@@ -1,0 +1,66 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: togglemaster-api
+  namespace: auth-service
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: togglemaster.local
+    http:
+      paths:
+      - path: /auth(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service: {name: auth-service, port: {name: http}}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: togglemaster-api
+  namespace: flag-service
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: togglemaster.local
+    http:
+      paths:
+      - path: /flags
+        pathType: Prefix
+        backend:
+          service: {name: flag-service, port: {name: http}}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: togglemaster-api
+  namespace: targeting-service
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: togglemaster.local
+    http:
+      paths:
+      - path: /rules
+        pathType: Prefix
+        backend:
+          service: {name: targeting-service, port: {name: http}}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: togglemaster-api
+  namespace: evaluation-service
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: togglemaster.local
+    http:
+      paths:
+      - path: /evaluate
+        pathType: Prefix
+        backend:
+          service: {name: evaluation-service, port: {name: http}}
