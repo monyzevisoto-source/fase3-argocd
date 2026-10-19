@@ -54,6 +54,14 @@ spec:
                 cpu: 50m
                 memory: 128Mi
 
+        # Minikube does not expose these control-plane endpoints on the node IP.
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+
   destination:
     server: https://kubernetes.default.svc
     namespace: observability
