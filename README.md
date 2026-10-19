@@ -98,6 +98,34 @@ kubectl get applications -n argocd -w
 O comando registra as cinco Applications. A partir daí, alterações na branch main
 são observadas e sincronizadas automaticamente pelo Argo CD.
 
+## Observabilidade local
+
+A Application `observability-local` instala o chart `kube-prometheus-stack` no
+namespace `observability`. O Prometheus coleta métricas do cluster através do
+Kubernetes API, kubelet/cAdvisor, node-exporter e kube-state-metrics. Os
+seletores de `ServiceMonitor` e `PodMonitor` aceitam recursos de qualquer
+namespace, permitindo que workloads instrumentados sejam adicionados sem
+alterar a Application.
+
+Depois da sincronização, valide os componentes e os targets:
+
+```bash
+kubectl get pods -n observability
+kubectl port-forward -n observability svc/observability-local-kube-prometheus-prometheus 9090:9090
+```
+
+Em outro terminal:
+
+```bash
+curl -s http://localhost:9090/api/v1/targets \
+  | jq -r '.data.activeTargets[] | [.labels.job, .health, .scrapeUrl] | @tsv'
+```
+
+Os targets de `kube-state-metrics`, `node-exporter` e kubelet devem aparecer
+como `up`. Para que um serviço da aplicação apareça como target, ele precisa
+expor métricas no formato Prometheus em `/metrics` e ter um `ServiceMonitor` ou
+`PodMonitor`; os endpoints `/health` existentes não são endpoints de métricas.
+
 ## Validar os manifests
 
 ```bash

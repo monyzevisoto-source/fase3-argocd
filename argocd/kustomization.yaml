@@ -6,3 +6,4 @@ resources:
 - targeting-service.yaml
 - evaluation-service.yaml
 - analytics-service.yaml
+- observability-local.yaml
