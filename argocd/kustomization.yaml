@@ -7,3 +7,4 @@ resources:
 - evaluation-service.yaml
 - analytics-service.yaml
 - observability-local.yaml
+- loki-local.yaml
