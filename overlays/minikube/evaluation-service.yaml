@@ -13,6 +13,11 @@ data:
   REDIS_URL: redis://redis.data.svc.cluster.local:6379
   FLAG_SERVICE_URL: http://flag-service.flag-service.svc.cluster.local:8002
   TARGETING_SERVICE_URL: http://targeting-service.targeting-service.svc.cluster.local:8003
+  OTEL_SERVICE_NAME: evaluation-service
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4318
+  OTEL_METRICS_EXPORTER: otlp
+  OTEL_SEMCONV_STABILITY_OPT_IN: http
 ---
 apiVersion: v1
 kind: Secret

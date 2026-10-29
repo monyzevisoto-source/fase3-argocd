@@ -21,7 +21,7 @@ spec:
         fullnameOverride: otel-collector
 
         image:
-          repository: otel/opentelemetry-collector-k8s
+          repository: otel/opentelemetry-collector-contrib
 
         serviceAccount:
           create: false
