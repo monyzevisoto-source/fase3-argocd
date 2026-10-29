@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/monyzevisoto-source/fase3-argocd.git
     targetRevision: main
-    path: overlays/local
+    path: overlays/minikube
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

@@ -45,9 +45,8 @@ repositório.
 Existem dois ambientes: `local` e `prod`.
 
 O ambiente `local` é executado nesta máquina dentro de um cluster Minikube.
-Minikube é a implementação do cluster local, não um terceiro ambiente. O
-overlay público é `overlays/local`; internamente ele reutiliza os manifests
-compatíveis com Minikube em `overlays/minikube`.
+Minikube é a implementação do cluster local, não um terceiro ambiente. A
+Application local do Argo aponta diretamente para `overlays/minikube`.
 
 O ambiente local executa auth-service, flag-service, targeting-service e
 evaluation-service com PostgreSQL e Redis dentro do cluster. SQS e DynamoDB não
