@@ -10,6 +10,9 @@ spec:
     chart: kube-prometheus-stack
     targetRevision: 92.10.1
     helm:
+      # Keep the existing Kubernetes resource and PVC names during the
+      # Application rename. This avoids recreating Prometheus/Grafana data.
+      releaseName: observability-local
       valuesObject:
         grafana:
           enabled: true

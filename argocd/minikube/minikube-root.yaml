@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minikube-root
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: togglemaster
+    app.kubernetes.io/component: app-of-apps
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/monyzevisoto-source/fase3-argocd.git
+    targetRevision: main
+    path: argocd/minikube
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
