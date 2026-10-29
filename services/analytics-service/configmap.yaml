@@ -8,3 +8,8 @@ data:
   AWS_SQS_URL: https://sqs.us-east-1.amazonaws.com/000613701548/EventQueue
   AWS_DYNAMODB_TABLE: ToggleMasterAnalytics
   AWS_REGION: us-east-1
+  OTEL_SERVICE_NAME: analytics-service
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4318
+  OTEL_METRICS_EXPORTER: otlp
+  OTEL_SEMCONV_STABILITY_OPT_IN: http

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-apm-contract
+  namespace: observability
+data:
+  OTEL_APM_EXPORTER_ENDPOINT: ""
+  OTEL_APM_EXPORTER_HEADERS_SECRET_KEY: OTEL_APM_EXPORTER_HEADERS
+  OTEL_APM_EXPORTER_PROTOCOL: otlphttp
+  README: RIC-72 cria um Secret externo e habilita o exporter OTLP do Datadog ou New Relic escolhido.

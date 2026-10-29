@@ -8,3 +8,5 @@ resources:
 - analytics-service.yaml
 - observability-local.yaml
 - loki-local.yaml
+- otel-collector-local.yaml
+- otel-collector-support-local.yaml

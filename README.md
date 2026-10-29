@@ -24,7 +24,7 @@ apagados do cluster.
 .
 ├── argocd/
 │   ├── kustomization.yaml
-│   └── <serviço>.yaml             # cinco Applications
+│   └── <serviço>.yaml             # Applications dos serviços e observabilidade
 └── services/
     └── <serviço>/
         ├── namespace.yaml
@@ -95,8 +95,28 @@ kubectl get applications -n argocd
 kubectl get applications -n argocd -w
 ```
 
-O comando registra as cinco Applications. A partir daí, alterações na branch main
+O comando registra as Applications. A partir daí, alterações na branch main
 são observadas e sincronizadas automaticamente pelo Argo CD.
+
+Além das Applications de aplicação, `otel-collector-local` instala o OpenTelemetry
+Collector no namespace `observability` usando o chart oficial pinado. O serviço é
+interno (`ClusterIP`) e recebe OTLP em:
+
+```text
+otel-collector.observability.svc.cluster.local:4317  # OTLP gRPC
+otel-collector.observability.svc.cluster.local:4318  # OTLP HTTP/protobuf
+```
+
+Traces ficam no exporter `debug` local, métricas são expostas em Prometheus e logs
+são enviados ao Loki em `loki-local.observability.svc.cluster.local:3100`. O
+ServiceMonitor coleta as métricas internas do Collector. Health (`13133`) e
+métricas (`8888/8889`) não são publicados por Ingress ou LoadBalancer.
+
+O Collector usa ServiceAccount dedicado sem token montado e NetworkPolicy restrita
+aos namespaces dos serviços, observabilidade, Loki e DNS. Nenhuma credencial é
+versionada. A ativação de Datadog ou New Relic, incluindo o Secret externo e o
+exporter OTLP correspondente, permanece como escopo do RIC-72; o ConfigMap
+`otel-collector-apm-contract` documenta as chaves esperadas.
 
 ## Observabilidade local
 
@@ -135,10 +155,25 @@ kubectl kustomize services/flag-service >/dev/null
 kubectl kustomize services/targeting-service >/dev/null
 kubectl kustomize services/evaluation-service >/dev/null
 kubectl kustomize services/analytics-service >/dev/null
+kubectl kustomize argocd/ >/dev/null
 ```
 
 A renderização não valida credenciais, conectividade com a AWS ou disponibilidade
 dos serviços externos.
+
+Após sincronizar no cluster local, valide o Collector com:
+
+```bash
+kubectl -n argocd get application otel-collector-local -o yaml
+kubectl -n observability get pods,svc,servicemonitor,networkpolicy
+kubectl -n observability port-forward svc/otel-collector 13133:13133
+curl -fsS http://localhost:13133/
+kubectl -n observability logs deploy/otel-collector --all-containers
+```
+
+O estado esperado da Application é `Synced`/`Healthy`. A indisponibilidade
+temporária do Loki é absorvida pela fila e retry configurados; não há exporter APM
+real neste ticket para testar até a decisão do RIC-72.
 
 ## Configuração dos serviços
 
