@@ -47,12 +47,7 @@ spec:
                 memory: 1Gi
 
         alertmanager:
-          enabled: true
-          alertmanagerSpec:
-            resources:
-              requests:
-                cpu: 50m
-                memory: 128Mi
+          enabled: false
 
         # Minikube does not expose these control-plane endpoints on the node IP.
         kubeControllerManager:
