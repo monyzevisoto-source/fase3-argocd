@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: observability-local
+  name: observability-minikube
   namespace: argocd
 spec:
   project: default
@@ -13,7 +13,7 @@ spec:
       valuesObject:
         grafana:
           enabled: true
-          adminPassword: prometheus-local
+          adminPassword: prometheus-minikube
           persistence:
             enabled: true
             size: 2Gi
@@ -67,4 +67,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+
 

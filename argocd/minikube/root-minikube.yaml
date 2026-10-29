@@ -1,21 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: otel-collector-support-local
+  name: togglemaster-minikube
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/monyzevisoto-source/fase3-argocd.git
     targetRevision: main
-    path: observability/otel-collector-support
+    path: overlays/minikube
   destination:
     server: https://kubernetes.default.svc
-    namespace: observability
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+    - CreateNamespace=true
+
 

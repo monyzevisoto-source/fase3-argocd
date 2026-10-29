@@ -42,26 +42,25 @@ repositório.
 
 ## Ambientes
 
-Existem dois ambientes: `local` e `aws`.
+Existem dois ambientes: `minikube` e `aws`.
 
-O ambiente `local` é executado nesta máquina dentro de um cluster Minikube.
-Minikube é a implementação do cluster local, não um terceiro ambiente. A
-Application local do Argo aponta diretamente para `overlays/minikube`, e as
-Applications de observabilidade locais ficam em `argocd/local`.
+O ambiente `minikube` é executado nesta máquina dentro de um cluster Minikube.
+A Application do Argo aponta diretamente para `overlays/minikube`, e as
+Applications de observabilidade ficam em `argocd/minikube`.
 
-O ambiente local executa auth-service, flag-service, targeting-service e
+O ambiente Minikube executa auth-service, flag-service, targeting-service e
 evaluation-service com PostgreSQL e Redis dentro do cluster. SQS e DynamoDB não
 são usados; analytics-service fica fora deste overlay.
 
 ```bash
-kubectl apply -k argocd/local
-kubectl get application togglemaster-local -n argocd
+kubectl apply -k argocd/minikube
+kubectl get application togglemaster-minikube -n argocd
 ```
 
 Para produção, use a Application raiz criada pelo `fase3-terraform`. O
 Terraform aponta para `argocd/aws`, que contém as Applications dos serviços e
 as variantes AWS de Prometheus, Loki e OpenTelemetry Collector. Não aplique
-`argocd/local` em um cluster EKS.
+`argocd/minikube` em um cluster EKS.
 
 ## Pré-requisitos
 
@@ -99,7 +98,7 @@ kubectl get applications -n argocd -w
 O comando registra as Applications. A partir daí, alterações na branch main
 são observadas e sincronizadas automaticamente pelo Argo CD.
 
-Além das Applications de aplicação, `otel-collector-local` instala o OpenTelemetry
+Além das Applications de aplicação, `otel-collector-minikube` instala o OpenTelemetry
 Collector no namespace `observability` usando o chart oficial pinado. O serviço é
 interno (`ClusterIP`) e recebe OTLP em:
 
@@ -109,7 +108,7 @@ otel-collector.observability.svc.cluster.local:4318  # OTLP HTTP/protobuf
 ```
 
 Traces ficam no exporter `debug` local, métricas são expostas em Prometheus e logs
-são enviados ao Loki em `loki-local.observability.svc.cluster.local:3100`. O
+são enviados ao Loki em `loki-minikube.observability.svc.cluster.local:3100`. O
 ServiceMonitor coleta as métricas internas do Collector. Health (`13133`) e
 métricas (`8888/8889`) não são publicados por Ingress ou LoadBalancer.
 
@@ -119,9 +118,9 @@ versionada. A ativação de Datadog ou New Relic, incluindo o Secret externo e o
 exporter OTLP correspondente, permanece como escopo do RIC-72; o ConfigMap
 `otel-collector-apm-contract` documenta as chaves esperadas.
 
-## Observabilidade local
+## Observabilidade Minikube
 
-A Application `observability-local` instala o chart `kube-prometheus-stack` no
+A Application `observability-minikube` instala o chart `kube-prometheus-stack` no
 namespace `observability`. O Prometheus coleta métricas do cluster através do
 Kubernetes API, kubelet/cAdvisor, node-exporter e kube-state-metrics. Os
 seletores de `ServiceMonitor` e `PodMonitor` aceitam recursos de qualquer
@@ -132,7 +131,7 @@ Depois da sincronização, valide os componentes e os targets:
 
 ```bash
 kubectl get pods -n observability
-kubectl port-forward -n observability svc/observability-local-kube-prometheus-prometheus 9090:9090
+kubectl port-forward -n observability svc/observability-minikube-kube-prometheus-prometheus 9090:9090
 ```
 
 Em outro terminal:
@@ -162,10 +161,10 @@ kubectl kustomize argocd/ >/dev/null
 A renderização não valida credenciais, conectividade com a AWS ou disponibilidade
 dos serviços externos.
 
-Após sincronizar no cluster local, valide o Collector com:
+Após sincronizar no cluster Minikube, valide o Collector com:
 
 ```bash
-kubectl -n argocd get application otel-collector-local -o yaml
+kubectl -n argocd get application otel-collector-minikube -o yaml
 kubectl -n observability get pods,svc,servicemonitor,networkpolicy
 kubectl -n observability port-forward svc/otel-collector 13133:13133
 curl -fsS http://localhost:13133/

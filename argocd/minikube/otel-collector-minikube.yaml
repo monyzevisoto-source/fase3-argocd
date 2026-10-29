@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: otel-collector-local
+  name: otel-collector-minikube
   namespace: argocd
   labels:
     app.kubernetes.io/part-of: togglemaster
@@ -82,7 +82,7 @@ spec:
         serviceMonitor:
           enabled: true
           extraLabels:
-            release: observability-local
+            release: observability-minikube
           metricsEndpoints:
             - port: metrics
               interval: 30s
@@ -112,7 +112,7 @@ spec:
             resource:
               attributes:
                 - key: deployment.environment
-                  value: local
+                  value: minikube
                   action: upsert
                 - key: service.namespace
                   value: togglemaster
@@ -129,7 +129,7 @@ spec:
               resource_to_telemetry_conversion:
                 enabled: true
             loki:
-              endpoint: http://loki-local.observability.svc.cluster.local:3100/loki/api/v1/push
+              endpoint: http://loki-minikube.observability.svc.cluster.local:3100/loki/api/v1/push
               retry_on_failure:
                 enabled: true
                 initial_interval: 1s
@@ -171,4 +171,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+
 
