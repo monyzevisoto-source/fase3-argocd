@@ -1,20 +1,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: flag-service
+  name: otel-collector-support-local
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/monyzevisoto-source/fase3-argocd.git
     targetRevision: main
-    path: services/flag-service
+    path: observability/otel-collector-support
   destination:
     server: https://kubernetes.default.svc
-    namespace: flag-service
+    namespace: observability
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - CreateNamespace=true
+      - CreateNamespace=true
+

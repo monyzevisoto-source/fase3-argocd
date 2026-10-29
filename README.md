@@ -42,24 +42,26 @@ repositório.
 
 ## Ambientes
 
-Existem dois ambientes: `local` e `prod`.
+Existem dois ambientes: `local` e `aws`.
 
 O ambiente `local` é executado nesta máquina dentro de um cluster Minikube.
 Minikube é a implementação do cluster local, não um terceiro ambiente. A
-Application local do Argo aponta diretamente para `overlays/minikube`.
+Application local do Argo aponta diretamente para `overlays/minikube`, e as
+Applications de observabilidade locais ficam em `argocd/local`.
 
 O ambiente local executa auth-service, flag-service, targeting-service e
 evaluation-service com PostgreSQL e Redis dentro do cluster. SQS e DynamoDB não
 são usados; analytics-service fica fora deste overlay.
 
 ```bash
-kubectl apply -f argocd/root-local.yaml
+kubectl apply -k argocd/local
 kubectl get application togglemaster-local -n argocd
 ```
 
-Para produção, continue usando a Application raiz criada pelo `fase3-terraform`
-e as cinco Applications de `argocd/`. Não aplique `root-local.yaml` em um
-cluster EKS.
+Para produção, use a Application raiz criada pelo `fase3-terraform`. O
+Terraform aponta para `argocd/aws`, que contém as Applications dos serviços e
+as variantes AWS de Prometheus, Loki e OpenTelemetry Collector. Não aplique
+`argocd/local` em um cluster EKS.
 
 ## Pré-requisitos
 

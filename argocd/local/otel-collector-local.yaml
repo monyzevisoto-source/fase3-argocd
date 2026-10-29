@@ -1,0 +1,174 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-collector-local
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: togglemaster
+    app.kubernetes.io/component: observability
+spec:
+  project: default
+  source:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    chart: opentelemetry-collector
+    # Keep the chart version explicit; update deliberately after reviewing its
+    # rendered Service, ports and security defaults.
+    targetRevision: 0.107.0
+    helm:
+      releaseName: otel-collector
+      valuesObject:
+        mode: deployment
+        fullnameOverride: otel-collector
+
+        image:
+          repository: otel/opentelemetry-collector-contrib
+
+        serviceAccount:
+          create: false
+          name: otel-collector
+
+        podSecurityContext:
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        ports:
+          otlp:
+            enabled: true
+            containerPort: 4317
+            servicePort: 4317
+            protocol: TCP
+            appProtocol: grpc
+          otlp-http:
+            enabled: true
+            containerPort: 4318
+            servicePort: 4318
+            protocol: TCP
+          jaeger-compact:
+            enabled: false
+          jaeger-thrift:
+            enabled: false
+          jaeger-grpc:
+            enabled: false
+          zipkin:
+            enabled: false
+          metrics:
+            enabled: true
+            containerPort: 8888
+            servicePort: 8888
+            protocol: TCP
+          prometheus:
+            enabled: true
+            containerPort: 8889
+            servicePort: 8889
+            protocol: TCP
+
+        service:
+          type: ClusterIP
+
+        serviceMonitor:
+          enabled: true
+          extraLabels:
+            release: observability-local
+          metricsEndpoints:
+            - port: metrics
+              interval: 30s
+              scrapeTimeout: 10s
+            - port: prometheus
+              interval: 30s
+              scrapeTimeout: 10s
+
+        # Use alternateConfig so disabled chart defaults (Jaeger/Zipkin and
+        # the default Prometheus receiver) are not merged back in.
+        alternateConfig:
+          extensions:
+            health_check:
+              endpoint: 0.0.0.0:13133
+          receivers:
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: 0.0.0.0:4317
+                http:
+                  endpoint: 0.0.0.0:4318
+          processors:
+            memory_limiter:
+              check_interval: 1s
+              limit_percentage: 80
+              spike_limit_percentage: 15
+            resource:
+              attributes:
+                - key: deployment.environment
+                  value: local
+                  action: upsert
+                - key: service.namespace
+                  value: togglemaster
+                  action: upsert
+                - key: k8s.cluster.name
+                  value: minikube
+                  action: upsert
+            batch:
+              timeout: 5s
+              send_batch_size: 512
+          exporters:
+            prometheus:
+              endpoint: 0.0.0.0:8889
+              resource_to_telemetry_conversion:
+                enabled: true
+            loki:
+              endpoint: http://loki-local.observability.svc.cluster.local:3100/loki/api/v1/push
+              retry_on_failure:
+                enabled: true
+                initial_interval: 1s
+                max_interval: 10s
+                max_elapsed_time: 60s
+              sending_queue:
+                enabled: true
+                num_consumers: 2
+                queue_size: 256
+            debug:
+              verbosity: basic
+          service:
+            extensions:
+              - health_check
+            pipelines:
+              traces:
+                receivers: [otlp]
+                processors: [memory_limiter, resource, batch]
+                exporters: [debug]
+              metrics:
+                receivers: [otlp]
+                processors: [memory_limiter, resource, batch]
+                exporters: [prometheus]
+              logs:
+                receivers: [otlp]
+                processors: [memory_limiter, resource, batch]
+                exporters: [loki]
+            telemetry:
+              metrics:
+                address: 0.0.0.0:8888
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+

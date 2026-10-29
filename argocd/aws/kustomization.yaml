@@ -1,0 +1,80 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../auth-service.yaml
+- ../flag-service.yaml
+- ../targeting-service.yaml
+- ../evaluation-service.yaml
+- ../analytics-service.yaml
+- ../observability-local.yaml
+- ../loki-local.yaml
+- ../otel-collector-local.yaml
+- ../otel-collector-support-local.yaml
+
+# Reuse the chart configuration as a base, but give AWS its own Application
+# identities and environment-specific Collector/Loki references.
+patches:
+- target:
+    group: argoproj.io
+    version: v1alpha1
+    kind: Application
+    name: observability-local
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: observability-aws
+    - op: replace
+      path: /spec/source/helm/valuesObject/grafana/adminPassword
+      value: prometheus-aws
+- target:
+    group: argoproj.io
+    version: v1alpha1
+    kind: Application
+    name: loki-local
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: loki-aws
+- target:
+    group: argoproj.io
+    version: v1alpha1
+    kind: Application
+    name: otel-collector-local
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: otel-collector-aws
+    - op: replace
+      path: /spec/source/helm/valuesObject/serviceMonitor/extraLabels/release
+      value: observability-aws
+    - op: replace
+      path: /spec/source/helm/valuesObject/alternateConfig/processors/resource/attributes/0/value
+      value: aws
+    - op: replace
+      path: /spec/source/helm/valuesObject/alternateConfig/processors/resource/attributes/2/value
+      value: eks
+    - op: replace
+      path: /spec/source/helm/valuesObject/alternateConfig/exporters/loki/endpoint
+      value: http://loki-aws.observability.svc.cluster.local:3100/loki/api/v1/push
+- target:
+    group: argoproj.io
+    version: v1alpha1
+    kind: Application
+    name: otel-collector-support-local
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: otel-collector-support-aws
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- auth-service.yaml
+- flag-service.yaml
+- targeting-service.yaml
+- evaluation-service.yaml
+- analytics-service.yaml
+- observability-aws.yaml
+- loki-aws.yaml
+- otel-collector-aws.yaml
+- otel-collector-support-aws.yaml
+

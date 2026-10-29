@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-local
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 92.10.1
+    helm:
+      valuesObject:
+        grafana:
+          enabled: true
+          adminPassword: prometheus-local
+          persistence:
+            enabled: true
+            size: 2Gi
+          service:
+            type: ClusterIP
+
+        prometheus:
+          prometheusSpec:
+            retention: 2d
+            # Discover ServiceMonitor/PodMonitor resources from every namespace.
+            # This allows application workloads to opt in with their own monitors.
+            serviceMonitorSelector: {}
+            serviceMonitorNamespaceSelector: {}
+            podMonitorSelector: {}
+            podMonitorNamespaceSelector: {}
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: standard
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 5Gi
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+
+        alertmanager:
+          enabled: false
+
+        # Minikube does not expose these control-plane endpoints on the node IP.
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+

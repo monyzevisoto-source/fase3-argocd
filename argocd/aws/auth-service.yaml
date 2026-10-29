@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: auth-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/monyzevisoto-source/fase3-argocd.git
+    targetRevision: main
+    path: services/auth-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: auth-service
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+
