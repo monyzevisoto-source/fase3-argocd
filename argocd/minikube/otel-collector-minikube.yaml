@@ -23,8 +23,6 @@ spec:
         image:
           repository: otel/opentelemetry-collector-contrib
 
-        automountServiceAccountToken: true
-
         serviceAccount:
           create: false
           name: otel-collector
