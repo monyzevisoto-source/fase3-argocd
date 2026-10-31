@@ -130,15 +130,14 @@ spec:
                   value: minikube
                   action: upsert
                 - key: service.namespace
-                  value: togglemaster
-                  action: upsert
+                  action: delete
                 - key: k8s.cluster.name
                   value: minikube
                   action: upsert
             resource/loki_labels:
               attributes:
                 - key: loki.resource.labels
-                  value: service.name, service.namespace, deployment.environment, k8s.cluster.name, k8s.namespace.name, k8s.deployment.name
+                  value: service.name, deployment.environment, k8s.cluster.name, k8s.namespace.name, k8s.deployment.name
                   action: upsert
             batch:
               timeout: 5s

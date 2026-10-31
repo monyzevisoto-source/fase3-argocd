@@ -188,3 +188,7 @@ os valores de CPU permanecem definidos nos manifests deste repositório.
 2. fase3-apps constrói, testa, verifica e publica as imagens no ECR.
 3. fase3-apps atualiza este repositório com a nova tag da imagem.
 4. Argo CD sincroniza o Git e atualiza os workloads no EKS.
+
+### Convenção de labels — logs Minikube
+
+O dashboard **Microserviços — Logs Minikube** usa a fonte provisionada **Loki Minikube** (`logs-minikube`) e seletores limitados ao período consultado. `k8s_namespace_name` e `k8s_deployment_name` identificam recursos Kubernetes reais; `service_name` identifica a aplicação e `k8s_cluster_name` identifica o cluster. O Collector não injeta mais `service.namespace=togglemaster`. Pod e node permanecem atributos no JSON para evitar aumentar o número de streams. O label `namespace` das métricas Prometheus pertence à coleta e não deve ser usado como substituto do namespace de origem dos logs. Logs antigos preservam os labels originais até expirar a retenção; use um intervalo recente no dashboard novo.

@@ -17,6 +17,115 @@ spec:
         grafana:
           enabled: true
           adminPassword: prometheus-minikube
+          additionalDataSources:
+            - name: Loki Minikube
+              uid: logs-minikube
+              type: loki
+              access: proxy
+              url: http://loki-minikube.observability.svc.cluster.local:3100
+              isDefault: false
+          dashboardProviders:
+            dashboardproviders.yaml:
+              apiVersion: 1
+              providers:
+                - name: microservices
+                  orgId: 1
+                  folder: Microserviços
+                  type: file
+                  disableDeletion: false
+                  options:
+                    path: /var/lib/grafana/dashboards/microservices
+          dashboards:
+            microservices:
+              logs:
+                json: |
+                  {
+                    "uid": "microservices-logs-minikube",
+                    "title": "Microserviços — Logs Minikube",
+                    "schemaVersion": 39,
+                    "version": 1,
+                    "tags": [
+                      "minikube",
+                      "logs"
+                    ],
+                    "timezone": "browser",
+                    "time": {
+                      "from": "now-15m",
+                      "to": "now"
+                    },
+                    "refresh": "30s",
+                    "templating": {
+                      "list": [
+                        {
+                          "name": "namespace",
+                          "label": "Namespace",
+                          "type": "query",
+                          "datasource": {
+                            "type": "loki",
+                            "uid": "logs-minikube"
+                          },
+                          "query": "label_values({k8s_cluster_name=\"minikube\"}, k8s_namespace_name)",
+                          "definition": "label_values({k8s_cluster_name=\"minikube\"}, k8s_namespace_name)",
+                          "refresh": 2,
+                          "multi": true,
+                          "includeAll": true,
+                          "allValue": ".+",
+                          "current": {
+                            "text": "All",
+                            "value": "$__all"
+                          }
+                        },
+                        {
+                          "name": "deployment",
+                          "label": "Deployment",
+                          "type": "query",
+                          "datasource": {
+                            "type": "loki",
+                            "uid": "logs-minikube"
+                          },
+                          "query": "label_values({k8s_cluster_name=\"minikube\",k8s_namespace_name=~\"$namespace\"}, k8s_deployment_name)",
+                          "definition": "label_values({k8s_cluster_name=\"minikube\",k8s_namespace_name=~\"$namespace\"}, k8s_deployment_name)",
+                          "refresh": 2,
+                          "multi": true,
+                          "includeAll": true,
+                          "allValue": ".+",
+                          "current": {
+                            "text": "All",
+                            "value": "$__all"
+                          }
+                        }
+                      ]
+                    },
+                    "panels": [
+                      {
+                        "id": 1,
+                        "title": "Logs por namespace e deployment",
+                        "type": "logs",
+                        "datasource": {
+                          "type": "loki",
+                          "uid": "logs-minikube"
+                        },
+                        "gridPos": {
+                          "x": 0,
+                          "y": 0,
+                          "w": 24,
+                          "h": 20
+                        },
+                        "targets": [
+                          {
+                            "refId": "A",
+                            "expr": "{k8s_cluster_name=\"minikube\",k8s_namespace_name=~\"$namespace\",k8s_deployment_name=~\"$deployment\"} | json | line_format \"{{.body}}\""
+                          }
+                        ],
+                        "options": {
+                          "showTime": true,
+                          "showCommonLabels": false,
+                          "wrapLogMessage": true,
+                          "sortOrder": "Descending"
+                        }
+                      }
+                    ]
+                  }
           persistence:
             enabled: true
             size: 2Gi
