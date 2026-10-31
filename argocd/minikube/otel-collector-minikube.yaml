@@ -96,6 +96,13 @@ spec:
 
         # Use alternateConfig so disabled chart defaults (Jaeger/Zipkin and
         # the default Prometheus receiver) are not merged back in.
+        extraEnvs:
+          - name: NEW_RELIC_LICENSE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: new-relic-otlp
+                key: license-key
+
         alternateConfig:
           extensions:
             health_check:
@@ -143,6 +150,20 @@ spec:
               timeout: 5s
               send_batch_size: 512
           exporters:
+            otlphttp/newrelic:
+              endpoint: https://otlp.nr-data.net
+              headers:
+                api-key: "${env:NEW_RELIC_LICENSE_KEY}"
+              compression: gzip
+              retry_on_failure:
+                enabled: true
+                initial_interval: 1s
+                max_interval: 30s
+                max_elapsed_time: 300s
+              sending_queue:
+                enabled: true
+                num_consumers: 2
+                queue_size: 512
             prometheus:
               endpoint: 0.0.0.0:8889
               resource_to_telemetry_conversion:
@@ -167,7 +188,7 @@ spec:
               traces:
                 receivers: [otlp]
                 processors: [memory_limiter, k8sattributes, resource, batch]
-                exporters: [debug]
+                exporters: [otlphttp/newrelic]
               metrics:
                 receivers: [otlp]
                 processors: [memory_limiter, k8sattributes, resource, batch]

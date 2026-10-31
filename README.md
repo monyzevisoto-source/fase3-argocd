@@ -107,7 +107,7 @@ otel-collector.observability.svc.cluster.local:4317  # OTLP gRPC
 otel-collector.observability.svc.cluster.local:4318  # OTLP HTTP/protobuf
 ```
 
-Traces ficam no exporter `debug` local, métricas são expostas em Prometheus e logs
+Traces são enviados ao New Relic por OTLP/HTTP autenticado, métricas são expostas em Prometheus e logs
 são enviados ao Loki em `loki-minikube.observability.svc.cluster.local:3100`. O
 ServiceMonitor coleta as métricas internas do Collector. Health (`13133`) e
 métricas (`8888/8889`) não são publicados por Ingress ou LoadBalancer.
@@ -172,8 +172,8 @@ kubectl -n observability logs deploy/otel-collector --all-containers
 ```
 
 O estado esperado da Application é `Synced`/`Healthy`. A indisponibilidade
-temporária do Loki é absorvida pela fila e retry configurados; não há exporter APM
-real neste ticket para testar até a decisão do RIC-72.
+temporária do Loki é absorvida pela fila e retry configurados. O exporter
+`otlphttp/newrelic` também possui fila em memória e retry, sem persistência após reinício.
 
 ## Configuração dos serviços
 
@@ -192,3 +192,50 @@ os valores de CPU permanecem definidos nos manifests deste repositório.
 ### Convenção de labels — logs Minikube
 
 O dashboard **Microserviços — Logs Minikube** usa a fonte provisionada **Loki Minikube** (`logs-minikube`) e seletores limitados ao período consultado. `k8s_namespace_name` e `k8s_deployment_name` identificam recursos Kubernetes reais; `service_name` identifica a aplicação e `k8s_cluster_name` identifica o cluster. O Collector não injeta mais `service.namespace=togglemaster`. Pod e node permanecem atributos no JSON para evitar aumentar o número de streams. O label `namespace` das métricas Prometheus pertence à coleta e não deve ser usado como substituto do namespace de origem dos logs. Logs antigos preservam os labels originais até expirar a retenção; use um intervalo recente no dashboard novo.
+
+
+## Secret do New Relic e pipeline de traces
+
+AWS e Minikube usam o Collector para enviar traces ao New Relic por HTTPS/443.
+Somente o Collector recebe a ingest license key por `secretKeyRef`:
+
+| Namespace | Secret | Chave |
+| --- | --- | --- |
+| observability | new-relic-otlp | license-key |
+
+Crie a Secret **antes** de sincronizar o Collector. O valor real não deve ser versionado.
+Exemplo, usando um arquivo local protegido com somente o valor da ingest license key:
+
+```bash
+kubectl create namespace observability --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n observability create secret generic new-relic-otlp \
+  --from-file=license-key=/caminho/seguro/new-relic-license-key \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+O arquivo deve conter a chave sem quebra de linha final. Também é possível provisionar
+essa mesma Secret por um gerenciador externo de segredos. Ela não é um recurso gerenciado
+por estas Kustomizations. Sem a Secret/chave, o pod do Collector não inicia.
+Após rotação, reinicie o Deployment `otel-collector` para recarregar a variável.
+
+As Applications `argocd/{aws,minikube}/otel-collector-*.yaml` definem o endpoint público
+`https://otlp.nr-data.net`. Para contas europeias, altere para
+`https://otlp.eu01.nr-data.net`. O exporter acrescenta `/v1/traces`.
+A NetworkPolicy já permite saída TCP/443. Métricas seguem para Prometheus e logs para Loki.
+Os serviços usam o endpoint interno do Collector e não precisam da chave New Relic.
+
+Publique as novas imagens Go e atualize as tags dos Deployments pelo fluxo existente;
+a configuração sozinha não adiciona spans aos binários antigos. No Minikube, reconstrua
+as imagens locais e reinicie os workloads. PostgreSQL (auth), Redis e publicação SQS
+(evaluation) passam a ter spans. No Minikube, SQS só terá spans se for configurado.
+O consumidor Python de SQS ainda precisa extrair os MessageAttributes W3C para
+continuar o trace na etapa de consumo.
+
+Valide no New Relic após gerar tráfego, incluindo um cache miss e envio SQS em AWS:
+
+```sql
+FROM Span SELECT count(*) FACET service.name, name SINCE 15 minutes ago
+```
+
+Consulte os logs do Collector para erros de autenticação/ingestão sem imprimir a Secret.
+Referência: https://docs.newrelic.com/docs/opentelemetry/best-practices/opentelemetry-otlp/
