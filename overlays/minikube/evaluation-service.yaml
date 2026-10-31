@@ -29,7 +29,7 @@ metadata:
   namespace: evaluation-service
 type: Opaque
 stringData:
-  SERVICE_API_KEY: local-service-api-key
+  SERVICE_API_KEY: local-master-key
 ---
 apiVersion: v1
 kind: Service
