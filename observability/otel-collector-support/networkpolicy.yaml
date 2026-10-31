@@ -46,6 +46,14 @@ spec:
         - port: 8889
           protocol: TCP
   egress:
+    # Kubernetes API: service port and common API server target ports.
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 6443
+          protocol: TCP
+        - port: 8443
+          protocol: TCP
     - to:
         - namespaceSelector:
             matchLabels:

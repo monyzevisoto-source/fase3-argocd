@@ -109,6 +109,18 @@ spec:
               check_interval: 1s
               limit_percentage: 80
               spike_limit_percentage: 15
+            k8sattributes:
+              auth_type: serviceAccount
+              passthrough: false
+              extract:
+                metadata:
+                  - k8s.namespace.name
+                  - k8s.deployment.name
+                  - k8s.pod.name
+                  - k8s.node.name
+              pod_association:
+                - sources:
+                    - from: connection
             resource:
               attributes:
                 - key: deployment.environment
@@ -119,6 +131,11 @@ spec:
                   action: upsert
                 - key: k8s.cluster.name
                   value: minikube
+                  action: upsert
+            resource/loki_labels:
+              attributes:
+                - key: loki.resource.labels
+                  value: service.name, service.namespace, deployment.environment, k8s.cluster.name, k8s.namespace.name, k8s.deployment.name
                   action: upsert
             batch:
               timeout: 5s
@@ -147,15 +164,15 @@ spec:
             pipelines:
               traces:
                 receivers: [otlp]
-                processors: [memory_limiter, resource, batch]
+                processors: [memory_limiter, k8sattributes, resource, batch]
                 exporters: [debug]
               metrics:
                 receivers: [otlp]
-                processors: [memory_limiter, resource, batch]
+                processors: [memory_limiter, k8sattributes, resource, batch]
                 exporters: [prometheus]
               logs:
                 receivers: [otlp]
-                processors: [memory_limiter, resource, batch]
+                processors: [memory_limiter, k8sattributes, resource, resource/loki_labels, batch]
                 exporters: [loki]
             telemetry:
               metrics:
