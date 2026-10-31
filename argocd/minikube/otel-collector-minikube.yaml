@@ -37,6 +37,9 @@ spec:
             drop:
               - ALL
 
+        livenessProbe:
+          initialDelaySeconds: 90
+
         resources:
           requests:
             cpu: 100m
