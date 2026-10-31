@@ -151,7 +151,7 @@ spec:
               send_batch_size: 512
           exporters:
             otlphttp/newrelic:
-              endpoint: https://otlp.nr-data.net
+              endpoint: https://otlp.eu01.nr-data.net
               headers:
                 api-key: "${env:NEW_RELIC_LICENSE_KEY}"
               compression: gzip

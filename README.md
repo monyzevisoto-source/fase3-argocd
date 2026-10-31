@@ -219,8 +219,8 @@ por estas Kustomizations. Sem a Secret/chave, o pod do Collector não inicia.
 Após rotação, reinicie o Deployment `otel-collector` para recarregar a variável.
 
 As Applications `argocd/{aws,minikube}/otel-collector-*.yaml` definem o endpoint público
-`https://otlp.nr-data.net`. Para contas europeias, altere para
-`https://otlp.eu01.nr-data.net`. O exporter acrescenta `/v1/traces`.
+`https://otlp.eu01.nr-data.net`, correspondente à conta New Relic na região EU.
+O exporter acrescenta `/v1/traces`.
 A NetworkPolicy já permite saída TCP/443. Métricas seguem para Prometheus e logs para Loki.
 Os serviços usam o endpoint interno do Collector e não precisam da chave New Relic.
 

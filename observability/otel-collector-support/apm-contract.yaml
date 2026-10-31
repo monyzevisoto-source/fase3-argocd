@@ -4,7 +4,7 @@ metadata:
   name: otel-collector-apm-contract
   namespace: observability
 data:
-  OTEL_APM_EXPORTER_ENDPOINT: https://otlp.nr-data.net
+  OTEL_APM_EXPORTER_ENDPOINT: https://otlp.eu01.nr-data.net
   OTEL_APM_EXPORTER_HEADERS_SECRET_KEY: license-key
   OTEL_APM_EXPORTER_SECRET_NAME: new-relic-otlp
   OTEL_APM_EXPORTER_PROTOCOL: otlphttp
