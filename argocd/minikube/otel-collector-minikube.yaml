@@ -85,7 +85,7 @@ spec:
         serviceMonitor:
           enabled: true
           extraLabels:
-            release: observability-minikube
+            release: observability-local
           metricsEndpoints:
             - port: metrics
               interval: 30s
