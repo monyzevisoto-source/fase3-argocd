@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: auto-healing
+  namespace: argo-events
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/limit-rps: "5"
+    nginx.ingress.kubernetes.io/proxy-body-size: 16k
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "10"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "10"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [healing.togglemaster.local]
+      secretName: auto-healing-tls
+  rules:
+    - host: healing.togglemaster.local
+      http:
+        paths:
+          - path: /jira
+            pathType: Exact
+            backend:
+              service:
+                name: auto-healing-eventsource-svc
+                port:
+                  number: 12000

@@ -6,4 +6,7 @@ resources:
 - loki-minikube.yaml
 - otel-collector-minikube.yaml
 - otel-collector-support-minikube.yaml
+- argo-events-minikube.yaml
+- argo-workflows-minikube.yaml
+- auto-healing-minikube.yaml
 

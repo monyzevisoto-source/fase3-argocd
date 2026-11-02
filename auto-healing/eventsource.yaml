@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: auto-healing
+  namespace: argo-events
+spec:
+  webhook:
+    jira:
+      port: "12000"
+      endpoint: /jira
+      method: POST
+      authSecret:
+        name: auto-healing-webhook
+        key: token
+  service:
+    ports:
+      - port: 12000
+        targetPort: 12000

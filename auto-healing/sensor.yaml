@@ -1,0 +1,71 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: auto-healing
+  namespace: argo-events
+spec:
+  template:
+    serviceAccountName: auto-healing-sensor
+  dependencies:
+    - name: jira-alert
+      eventSourceName: auto-healing
+      eventName: jira
+      filters:
+        data:
+          - path: body.source
+            type: string
+            value: [jira-service-management]
+          - path: body.alert_source
+            type: string
+            value: [newrelic]
+          - path: body.environment
+            type: string
+            value: [minikube, aws]
+          - path: body.service
+            type: string
+            value: [evaluation-service]
+          - path: body.alert_type
+            type: string
+            value: [availability]
+          - path: body.status
+            type: string
+            value: [firing, open]
+          - path: body.alert_id
+            type: string
+            value: ["^[a-z0-9][a-z0-9-]{0,39}$"]
+  triggers:
+    - template:
+        name: restart-evaluation-service
+        conditions: jira-alert
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                name: auto-healing-placeholder
+                namespace: argo-events
+              spec:
+                workflowTemplateRef:
+                  name: auto-healing-evaluation-service
+                arguments:
+                  parameters:
+                    - name: alert-id
+                      value: unknown
+                    - name: environment
+                      value: unknown
+          parameters:
+            - src:
+                dependencyName: jira-alert
+                dataKey: body.alert_id
+              dest: spec.arguments.parameters.0.value
+            - src:
+                dependencyName: jira-alert
+                dataKey: body.environment
+              dest: spec.arguments.parameters.1.value
+            - src:
+                dependencyName: jira-alert
+                dataTemplate: "auto-healing-{{ .Input.body.alert_id }}"
+              dest: metadata.name
+              operation: overwrite

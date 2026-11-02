@@ -10,3 +10,6 @@ resources:
 - loki-aws.yaml
 - otel-collector-aws.yaml
 - otel-collector-support-aws.yaml
+- argo-events-aws.yaml
+- argo-workflows-aws.yaml
+- auto-healing-aws.yaml

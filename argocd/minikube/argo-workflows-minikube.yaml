@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-workflows-minikube
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://argoproj.github.io/argo-helm
+    chart: argo-workflows
+    targetRevision: 2.0.15
+    helm:
+      valuesObject:
+        singleNamespace: false
+        controller:
+          workflowNamespaces:
+            - argo-events
+        server:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: auto-healing-aws
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/monyzevisoto-source/fase3-argocd.git
+    targetRevision: main
+    path: auto-healing
+    kustomize:
+      patches:
+        - target:
+            group: networking.k8s.io
+            version: v1
+            kind: Ingress
+            name: auto-healing
+            namespace: argo-events
+          patch: |-
+            - op: replace
+              path: /spec/tls/0/hosts/0
+              value: healing.seu-dominio.com
+            - op: replace
+              path: /spec/rules/0/host
+              value: healing.seu-dominio.com
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-events
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: auto-healing-evaluation-service
+  namespace: argo-events
+spec:
+  serviceAccountName: auto-healing-workflow
+  entrypoint: restart-and-verify
+  arguments:
+    parameters:
+      - name: alert-id
+      - name: environment
+  templates:
+    - name: restart-and-verify
+      inputs:
+        parameters:
+          - name: alert-id
+          - name: environment
+      container:
+        image: alpine/k8s:1.35.0
+        command: [/bin/sh, -c]
+        args:
+          - |
+            set -eu
+            echo "auto-healing alert={{inputs.parameters.alert-id}} environment={{inputs.parameters.environment}}"
+            kubectl -n evaluation-service rollout restart deployment/evaluation-service-deployment
+            kubectl -n evaluation-service rollout status deployment/evaluation-service-deployment --timeout=180s
+            echo "evaluation-service rollout completed; readiness probe validates /health"
