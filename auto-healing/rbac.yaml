@@ -61,6 +61,13 @@ rules:
   - apiGroups: [argoproj.io]
     resources: [workflowtaskresults]
     verbs: [create, get, patch, update]
+  - apiGroups: [""]
+    resources: [configmaps]
+    resourceNames: [auto-healing-cooldown]
+    verbs: [get, patch, update]
+  - apiGroups: [""]
+    resources: [configmaps]
+    verbs: [create]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

@@ -6,6 +6,9 @@ metadata:
 spec:
   serviceAccountName: auto-healing-workflow
   entrypoint: restart-and-verify
+  synchronization:
+    mutexes:
+      - name: evaluation-service-auto-healing
   arguments:
     parameters:
       - name: alert-id
@@ -23,6 +26,20 @@ spec:
           - |
             set -eu
             echo "auto-healing alert={{inputs.parameters.alert-id}} environment={{inputs.parameters.environment}}"
+            cooldown_configmap=auto-healing-cooldown
+            now=$(date +%s)
+            last_restart=$(kubectl -n argo-events get configmap "$cooldown_configmap" -o jsonpath='{.data.lastRestartEpoch}' 2>/dev/null || true)
+            if [ -n "$last_restart" ] && [ "$((now - last_restart))" -lt 300 ]; then
+              echo "cooldown active; skipping restart (last restart epoch=$last_restart)"
+              exit 0
+            fi
+            if [ -n "$last_restart" ]; then
+              kubectl -n argo-events patch configmap "$cooldown_configmap" --type merge \
+                -p "{\"data\":{\"lastRestartEpoch\":\"$now\"}}"
+            else
+              kubectl -n argo-events create configmap "$cooldown_configmap" \
+                --from-literal=lastRestartEpoch="$now"
+            fi
             kubectl -n evaluation-service rollout restart deployment/evaluation-service-deployment
             kubectl -n evaluation-service rollout status deployment/evaluation-service-deployment --timeout=180s
             echo "evaluation-service rollout completed; readiness probe validates /health"

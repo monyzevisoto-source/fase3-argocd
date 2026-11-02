@@ -69,3 +69,6 @@ spec:
                 dataTemplate: "auto-healing-{{ .Input.body.alert_id }}"
               dest: metadata.name
               operation: overwrite
+      rateLimit:
+        unit: Minute
+        requestsPerUnit: 1

@@ -62,6 +62,14 @@ Terraform aponta para `argocd/aws`, que contém as Applications dos serviços e
 as variantes AWS de Prometheus, Loki e OpenTelemetry Collector. Não aplique
 `argocd/minikube` em um cluster EKS.
 
+## Auto-healing
+
+O auto-healing é instalado pelas Applications de cada ambiente e usa o mesmo
+diretório `auto-healing/`. O Sensor limita os disparos a um por minuto; o
+Workflow usa um mutex para impedir execuções concorrentes e mantém um cooldown
+persistente de 300 segundos em `argo-events/auto-healing-cooldown`. O ConfigMap
+é criado em runtime e não contém segredo versionado.
+
 ## Pré-requisitos
 
 - cluster EKS criado pelo repositório fase3-terraform;
