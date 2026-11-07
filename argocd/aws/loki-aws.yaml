@@ -39,6 +39,7 @@ spec:
           persistence:
             enabled: true
             size: 10Gi
+            storageClass: gp3
 
         # Disable the other deployment modes when using Monolithic mode.
         backend:

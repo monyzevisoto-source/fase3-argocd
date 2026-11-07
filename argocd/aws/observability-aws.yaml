@@ -17,6 +17,7 @@ spec:
           persistence:
             enabled: true
             size: 2Gi
+            storageClassName: gp3
           service:
             type: ClusterIP
 
@@ -32,7 +33,7 @@ spec:
             storageSpec:
               volumeClaimTemplate:
                 spec:
-                  storageClassName: standard
+                  storageClassName: gp3
                   accessModes:
                     - ReadWriteOnce
                   resources:
