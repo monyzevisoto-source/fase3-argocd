@@ -15,9 +15,7 @@ spec:
           enabled: true
           adminPassword: prometheus-aws
           persistence:
-            enabled: true
-            size: 2Gi
-            storageClassName: gp3
+            enabled: false
           service:
             type: ClusterIP
 
@@ -30,15 +28,6 @@ spec:
             serviceMonitorNamespaceSelector: {}
             podMonitorSelector: {}
             podMonitorNamespaceSelector: {}
-            storageSpec:
-              volumeClaimTemplate:
-                spec:
-                  storageClassName: gp3
-                  accessModes:
-                    - ReadWriteOnce
-                  resources:
-                    requests:
-                      storage: 5Gi
             resources:
               requests:
                 cpu: 200m
