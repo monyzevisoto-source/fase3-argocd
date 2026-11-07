@@ -39,6 +39,17 @@ spec:
           persistence:
             enabled: false
 
+        gateway:
+          enabled: false
+        lokiCanary:
+          enabled: false
+        test:
+          enabled: false
+        chunksCache:
+          enabled: false
+        resultsCache:
+          enabled: false
+
         # Disable the other deployment modes when using Monolithic mode.
         backend:
           replicas: 0
