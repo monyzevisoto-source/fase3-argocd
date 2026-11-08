@@ -21,6 +21,12 @@ spec:
           service:
             type: ClusterIP
 
+        prometheusOperator:
+          livenessProbe:
+            initialDelaySeconds: 30
+          readinessProbe:
+            initialDelaySeconds: 5
+
         prometheus:
           prometheusSpec:
             retention: 2d
