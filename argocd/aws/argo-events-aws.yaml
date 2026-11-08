@@ -12,7 +12,13 @@ spec:
     chart: argo-events
     targetRevision: 2.4.27
     helm:
-      valuesObject: {}
+      valuesObject:
+        controller:
+          replicas: 1
+        configs:
+          jetstream:
+            streamConfig:
+              replicas: 1
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-events
