@@ -1,6 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+- auto-healing-aws.yaml
 - storageclass-gp3.yaml
 - auth-service.yaml
 - flag-service.yaml
@@ -13,4 +14,3 @@ resources:
 - otel-collector-support-aws.yaml
 - argo-events-aws.yaml
 - argo-workflows-aws.yaml
-- auto-healing-aws.yaml

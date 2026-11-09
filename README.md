@@ -1,7 +1,7 @@
 # Fase 3 — GitOps com Argo CD
 
-Repositório que contém os manifests Kubernetes e as cinco Applications do Argo
-CD para executar o ToggleMaster no Amazon EKS.
+Repositório que contém os manifests Kubernetes e as Applications do Argo CD
+para executar o ToggleMaster em dois ambientes: Amazon EKS (AWS) e Minikube.
 
 ## Como funciona
 
@@ -23,8 +23,10 @@ apagados do cluster.
 ```text
 .
 ├── argocd/
-│   ├── kustomization.yaml
-│   └── <serviço>.yaml             # Applications dos serviços e observabilidade
+│   ├── aws/                       # Applications usadas no EKS
+│   ├── minikube/                  # Applications usadas no Minikube
+│   └── kustomization.yaml         # Entrada AWS, usada pelo Terraform
+├── overlays/minikube/             # Workloads e infraestrutura local
 └── services/
     └── <serviço>/
         ├── namespace.yaml
@@ -37,8 +39,9 @@ apagados do cluster.
 ```
 
 Os serviços são auth-service, flag-service, targeting-service,
-evaluation-service e analytics-service. Os Secrets não são versionados neste
-repositório.
+evaluation-service e analytics-service. Os manifests AWS esperam Secrets
+criados previamente no cluster; o overlay Minikube contém apenas valores locais
+de desenvolvimento para permitir uma instalação reproduzível.
 
 ## Ambientes
 
@@ -53,13 +56,16 @@ evaluation-service com PostgreSQL e Redis dentro do cluster. SQS e DynamoDB não
 são usados; analytics-service fica fora deste overlay.
 
 ```bash
+# Com o kubeconfig apontando para o Minikube
 kubectl apply -k argocd/minikube
 kubectl get application togglemaster-minikube -n argocd
 ```
 
 Para produção, use a Application raiz criada pelo `fase3-terraform`. O
 Terraform aponta para `argocd/aws`, que contém as Applications dos serviços e
-as variantes AWS de Prometheus, Loki e OpenTelemetry Collector. Não aplique
+as variantes AWS de Prometheus, Loki e OpenTelemetry Collector.
+
+Não aplique `argocd/` ou `argocd/aws` em um cluster Minikube, nem
 `argocd/minikube` em um cluster EKS.
 
 ## Auto-healing
@@ -91,20 +97,27 @@ persistente de 300 segundos em `argo-events/auto-healing-cooldown`. O ConfigMap
 | evaluation-service | aws-secret | AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN |
 | analytics-service | aws-secret | AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN |
 
-Não commite credenciais, tokens, URLs de banco com senha ou Secrets Kubernetes.
+Não commite credenciais, tokens, URLs de banco com senha ou Secrets AWS. Os
+Secrets de produção devem ser criados fora deste repositório. Os Secrets
+presentes em `overlays/minikube` são valores locais de desenvolvimento e não
+devem ser reutilizados em AWS.
 
 ## Registrar as Applications
 
-Com o kubeconfig apontando para o cluster correto:
+Para AWS/EKS, a Application raiz é criada pelo Terraform. Se for necessário
+registrar manualmente as Applications AWS, confirme o contexto antes de usar:
 
 ```bash
-kubectl apply -k argocd/
+# Deve exibir o cluster EKS esperado
+kubectl config current-context
+kubectl apply -k argocd/aws
 kubectl get applications -n argocd
 kubectl get applications -n argocd -w
 ```
 
-O comando registra as Applications. A partir daí, alterações na branch main
-são observadas e sincronizadas automaticamente pelo Argo CD.
+Para Minikube, use `kubectl apply -k argocd/minikube`, conforme descrito acima.
+Depois do registro, alterações na branch `main` são observadas e sincronizadas
+automaticamente pelo Argo CD.
 
 Além das Applications de aplicação, `otel-collector-minikube` instala o OpenTelemetry
 Collector no namespace `observability` usando o chart oficial pinado. O serviço é
@@ -157,13 +170,13 @@ expor métricas no formato Prometheus em `/metrics` e ter um `ServiceMonitor` ou
 ## Validar os manifests
 
 ```bash
-kubectl kustomize argocd/
+kubectl kustomize argocd/aws >/dev/null
+kubectl kustomize argocd/minikube >/dev/null
 kubectl kustomize services/auth-service >/dev/null
 kubectl kustomize services/flag-service >/dev/null
 kubectl kustomize services/targeting-service >/dev/null
 kubectl kustomize services/evaluation-service >/dev/null
 kubectl kustomize services/analytics-service >/dev/null
-kubectl kustomize argocd/ >/dev/null
 ```
 
 A renderização não valida credenciais, conectividade com a AWS ou disponibilidade
